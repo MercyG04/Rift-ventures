@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Testimonial extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'author_name',
+        'content',
+        'rating',
+        'is_approved',
+        'admin_response',
+    ];
+
+    protected $casts = [
+        'is_approved' => 'boolean',
+        'rating' => 'integer',
+    ];
+
+   
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+}
