@@ -1,3 +1,5 @@
+@props(['package'])
+
 <div 
     class="max-w-5xl mx-auto px-4 relative z-30"
     x-data="{
@@ -26,11 +28,20 @@
 
             // Fetch from our API endpoint
             try {
-                const response = await fetch(`/api/search/live?${params.toString()}`);
+                const response = await fetch(`/api/search/live?${params.toString()}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Network response was not ok');
+                
                 const data = await response.json();
-                this.results = data.results;
+                this.results = data.results || []; // Safety check if results is undefined
             } catch (error) {
                 console.error('Search error:', error);
+                this.results = [];
             } finally {
                 this.isLoading = false;
             }
@@ -39,11 +50,12 @@
     @click.outside="isOpen = false"
 >
     <!-- The Search Bar Container -->
-    <div class="bg-white rounded-full shadow-2xl border border-gray-100 p-2">
-        <form action="{{ route('packages.search') }}" method="GET" class="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-gray-200">
+    <!-- UPDATED: rounded-2xl on mobile (sharper corners), rounded-full on desktop (pill shape) -->
+    <div class="bg-white rounded-2xl md:rounded-full shadow-2xl border border-gray-100 p-4 md:p-2">
+        <form action="{{ route('packages.search') }}" method="GET" class="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-gray-200 gap-4 md:gap-0">
             
             <!-- 1. Destination Input -->
-            <div class="relative flex-grow px-6 py-2 md:py-0">
+            <div class="relative flex-grow px-2 md:px-6 py-2 md:py-0">
                 <label for="location" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Destination</label>
                 <div class="flex items-center">
                     <i class="fas fa-map-marker-alt text-secondary text-lg mr-3"></i>
@@ -82,7 +94,7 @@
                                     <div>
                                         <div class="font-bold text-dark-text text-sm" x-text="result.title"></div>
                                         <div class="text-xs text-gray-500">
-                                            <span x-text="result.location"></span> • KES <span x-text="result.price / 100"></span>
+                                            <span x-text="result.location"></span> • <span x-text="result.currency"></span> <span x-text="result.price / 100"></span>
                                         </div>
                                     </div>
                                 </a>
@@ -98,7 +110,7 @@
             </div>
 
             <!-- 2. Travelers Input -->
-            <div class="px-6 py-2 md:py-0 w-full md:w-auto min-w-[160px]">
+            <div class="px-2 md:px-6 py-2 md:py-0 w-full md:w-auto min-w-[160px]">
                 <label for="travelers" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Guests</label>
                 <div class="flex items-center">
                     <i class="fas fa-user-friends text-secondary text-lg mr-3"></i>
@@ -114,7 +126,7 @@
             </div>
 
             <!-- 3. Duration Input -->
-            <div class="px-6 py-2 md:py-0 w-full md:w-auto min-w-[160px]">
+            <div class="px-2 md:px-6 py-2 md:py-0 w-full md:w-auto min-w-[160px]">
                 <label for="duration" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Days</label>
                 <div class="flex items-center">
                     <i class="far fa-clock text-secondary text-lg mr-3"></i>
@@ -131,9 +143,8 @@
             </div>
 
             <!-- 4. Submit Button -->
-            <!-- The padding (p-1 pl-2) gives the button breathing room from the dividers -->
-            <div class="p-1 pl-2">
-                <button type="submit" class="w-full md:w-auto h-12 px-8 rounded-full btn-bold-action flex items-center justify-center shadow-md hover:shadow-lg transform transition active:scale-95">
+            <div class="p-1 md:pl-2">
+                <button type="submit" class="w-full md:w-auto h-12 px-8 rounded-xl md:rounded-full btn-bold-action flex items-center justify-center shadow-md hover:shadow-lg transform transition active:scale-95">
                     <i class="fas fa-search md:mr-2"></i> 
                     <span class="hidden md:inline">Search</span>
                     <span class="md:hidden">Search Trips</span>

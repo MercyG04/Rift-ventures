@@ -166,8 +166,8 @@
                             >
                               <x-variant-card :package="$package" :variant="$variant" /> 
                                     </div>
-                                </div>
-                            </div>
+                                
+                            
                         @endforeach
 
                     </div>

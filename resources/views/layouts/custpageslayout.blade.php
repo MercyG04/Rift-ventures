@@ -16,24 +16,7 @@
     <!-- Tailwind CSS -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
-    <style>
-        .fixed-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-image: url('https://images.unsplash.com/photo-1526660690293-bcd32dc3b123?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
-        }
-        
-        html {
-            scroll-behavior: smooth;
-        }
-    </style>
+    
 </head>
 <body class="font-sans antialiased text-dark-text">
 

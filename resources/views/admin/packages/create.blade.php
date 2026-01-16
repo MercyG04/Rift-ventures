@@ -93,10 +93,10 @@
                     <!-- Price & Currency -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Starting Price (Cents)</label>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Starting Price </label>
                             <input type="number" name="starting_price" value="{{ old('starting_price') }}" 
                                    class="w-full bg-gray-100 border-transparent focus:border-primary focus:bg-white focus:ring-0 rounded-lg h-12 px-4" 
-                                   placeholder="e.g. 1500000" required>
+                                   placeholder="e.g. 1500" required>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Currency</label>
