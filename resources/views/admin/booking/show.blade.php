@@ -163,7 +163,7 @@
                             <th class="px-6 py-3 font-medium">Passport / ID</th>
                             <th class="px-6 py-3 font-medium">DOB</th>
                             <th class="px-6 py-3 font-medium">Role</th>
-                            <th class="px-6 py-3 text-right">Actions</th>
+                            
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -182,10 +182,7 @@
                                     <span class="text-xs text-gray-500">Guest</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-right">
-                                <!-- Edit Link (Leads to AdmTravelerDetailsController) -->
-                                <a href="{{ route('admin.travelers.edit', $booking) }}" class="text-blue-600 hover:underline">Edit</a>
-                            </td>
+                            
                         </tr>
                         @endforeach
                     </tbody>

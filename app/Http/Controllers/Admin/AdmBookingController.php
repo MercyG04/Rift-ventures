@@ -58,7 +58,7 @@ class AdmBookingController extends Controller
         $booking->load(['user', 'safariPackage', 'travelerDetails', 'payments']);
 
         // Check if traveler details are present
-        $travelersComplete = $booking->travelers->count() > 0;
+          $travelersComplete = $booking->travelerDetails->count() > 0;
         
         return view('admin.booking.show', compact('booking', 'travelersComplete'));
     }

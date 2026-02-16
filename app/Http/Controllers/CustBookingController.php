@@ -6,8 +6,9 @@ use App\Models\Booking;
 use App\Models\SafariPackage;
 use App\Models\PackageVariant;
 use App\Enums\BookingStatus;
-use app\Notifications\BookingInvoice;
+use App\Notifications\BookingInvoice;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -80,30 +81,32 @@ class CustBookingController extends Controller
             'num_travelers' => $totalTravelers,
             'total_price' => $totalPrice,
             'status' => BookingStatus::PENDING,
-           
-            // Include contact details and traveler breakdown in special requests (for the booking record)
-            'special_requests' => "Contact Name: {$validated['contact_name']}, {$validated['contact_phone']}. Adults: {$validated['num_adults']}, Children: {$validated['num_children']}. \n" . $validated['special_requests'],
+            'contact_name' => $validated['contact_name'],
+            'contact_email' => $validated['contact_email'],
+            'contact_phone' => $validated['contact_phone'],
+            
+  
+            'special_requests' => $validated['special_requests'],
         ];
 
-        // 4. THE AUTH GATEKEEPER 🛡️
+       
         if (!Auth::check()) {
             session()->put('pending_booking', $bookingData);
             return redirect()->route('register')
                 ->with('info', 'Please create an account to complete your booking.');
         }
 
-        // 5. Create Record
+       
         $booking = $this->createBookingRecord(Auth::user()->id, $bookingData);
-     
 
-        $request->user()->notify(new BookingInvoice($booking));
-      
-        return redirect()->route('bookings.show', $booking)
-            ->with('success', 'Booking initiated! Please check your email for the invoice and payment instructions.');
-    }
+        
+     
+      return redirect()->route('bookings.checkout', $booking);
+
+    }       
     
 
-    // --- PHASE 2.5: RESUMING AFTER LOGIN ---
+    
     public function resume()
     {
         if (!session()->has('pending_booking')) {
@@ -132,10 +135,40 @@ class CustBookingController extends Controller
             return redirect()->route('bookings.show', $booking);
         }
 
-        return view('bookings.checkout', compact('booking'));
+        return view('customer.bookingcheckout', compact('booking'));
     }
 
-    // --- PHASE 5: BOOKING HISTORY & CANCELLATION ---
+    public function confirm(Booking $booking)
+    {
+        if ($booking->user_id !== Auth::id()) abort(403);
+
+        // Prevent double processing if already confirmed/paid (though UI handles this too)
+        if ($booking->status === BookingStatus::CONFIRMED) {
+             return redirect()->route('bookings.show', $booking)
+                ->with('info', 'This booking has already been confirmed.');
+        }
+
+        try {
+            // 1. Send the Email
+            $booking->user->notify(new BookingInvoice($booking));
+            
+            Log::info("Invoice sent for Booking ID: {$booking->id}");
+
+            // 2. Redirect to Success Page (Bookings Show)
+            // The layout will catch this 'success' session and show the Green Toaster
+            return redirect()->route('bookings.show', $booking)
+                ->with('success', 'Booking Confirmed! Invoice sent to your email.');
+
+        } catch (Throwable $e) {
+            Log::error("Failed to send invoice for ID {$booking->id}: " . $e->getMessage());
+            
+            // 3. Handle Failure
+            // Redirect with 'error' session to show Red Toaster
+            return back()->with('error', 'Error sending invoice. Please try again later or contact us directly.');
+        }
+    }
+
+    
     public function index()
     {
         $bookings = Auth::user()->bookings()
@@ -152,9 +185,9 @@ class CustBookingController extends Controller
             abort(403);
         }
         
-        $booking->load(['safariPackage', 'payments', 'travelers']); // check if 'travelers' is the relationship name
+        $booking->load(['safariPackage', 'payments', 'travelerDetails']); 
 
-        return view('bookings.show', compact('booking'));
+        return view('customer.bookingcheckout', compact('booking'));
     }
 
     public function cancel(Booking $booking)

@@ -173,6 +173,24 @@
                         >{{ old('special_requests') }}</textarea>
                     </div>
 
+                    @guest
+                        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-exclamation-circle text-red-500 mt-0.5 text-lg"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-bold text-red-800 uppercase tracking-wide">Account Required</h3>
+                                    <div class="mt-1 text-sm text-red-700">
+                                        <p>To complete your booking, kindly ensure you <strong>Log In</strong> or <strong>Create an Account</strong></p>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endguest
+
+
                     <!-- Submit Button -->
                     <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-lg text-lg shadow-xl hover:bg-purple-700 hover:shadow-2xl transform active:scale-95 transition duration-300">
                         Complete Booking &rarr;

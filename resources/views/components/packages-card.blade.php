@@ -18,6 +18,8 @@
         <img 
             src="{{ $package->featured_image_path ? Storage::url($package->featured_image_path) : 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" 
             alt="{{ $package->title }}" 
+            loading="lazy"
+            decoding="async"
             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         >
         

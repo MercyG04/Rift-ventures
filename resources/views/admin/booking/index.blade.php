@@ -86,7 +86,7 @@
                                 
                                 $badgeClass = "bg-{$color}-100 text-{$color}-800 border-{$color}-200";
                             @endphp
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border {{ $statusColor }}">
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border {{ $color }}">
                                 {{ $booking->status->label() }}
                             </span>
                         </td>

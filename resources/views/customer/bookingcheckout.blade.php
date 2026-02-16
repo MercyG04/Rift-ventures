@@ -3,11 +3,29 @@
 @section('title', 'Review Booking - ' . $booking->safariPackage->title)
 
 @section('content')
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+     @if(session('success'))
+        <div class="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-xl shadow-sm mb-8 animate-fade-in-down">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-500 text-3xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-bold text-green-800">Booking Registered Successfully!</h3>
+                    <p class="text-green-700 mt-1">
+                        Your booking request for <strong>{{ $booking->safariPackage->title }}</strong> has been received. 
+                        An invoice has been sent to <strong>{{ $booking->contact_email }}</strong>. Please check your email for payment instructions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- PAGE HEADER -->
     <div class="bg-gray-50 py-10 border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p class="text-sm font-bold text-secondary tracking-wide uppercase mb-2">Step 2 of 3</p>
+            <p class="text-sm font-bold text-secondary tracking-wide uppercase mb-2">Review and Confirm booking.</p>
             <h1 class="text-4xl font-extrabold text-primary mb-2">Booking Summary</h1>
             <p class="text-xl text-gray-500 font-medium">Please review your trip details before confirming.</p>
         </div>
@@ -23,8 +41,8 @@
                 <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                     <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                         <h3 class="text-lg font-bold text-dark-text">Trip Details</h3>
-                        <a href="{{ route('customer.booking', $booking->safariPackage) }}" class="text-sm text-secondary font-semibold hover:underline">
-                            <i class="fas fa-pencil-alt mr-1"></i> Edit
+                        <a href="{{ route('bookings.show', $booking->safariPackage) }}" class="text-sm text-secondary font-semibold hover:underline">
+                            
                         </a>
                     </div>
                     <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -141,13 +159,24 @@
                                 </span>
                             </div>
                             
-                            <!-- Action Button -->
-                            <form action="{{ route('bookings.show', $booking) }}" method="GET">
-                                <button type="submit" class="w-full btn-bold-action py-4 text-lg shadow-xl hover:shadow-2xl transform active:scale-95 transition flex justify-center items-center">
-                                    Confirm & Checkout <i class="fas fa-check-circle ml-2"></i>
+                            <form action="{{ route('bookings.confirm', $booking) }}" method="POST" x-data="{ submitting: false }" @submit="submitting = true">
+                                @csrf
+                                <button type="submit" 
+                                        class="w-full bg-primary text-white font-bold py-4 rounded-lg text-lg shadow-xl hover:bg-purple-700 hover:shadow-2xl transform active:scale-95 transition duration-300"
+                                        :disabled="submitting"
+                                        :class="{ 'opacity-50 cursor-not-allowed': submitting }"
+                                >
+                                    <!-- Normal State -->
+                                    <span x-show="!submitting" class="flex items-center">
+                                        Confirm & Checkout 
+                                    </span>
+                                    <!-- Loading State -->
+                                    <span x-show="submitting" class="flex items-center" style="display: none;">
+                                        <i class="fas fa-spinner fa-spin mr-2"></i> Processing Invoice...
+                                    </span>
                                 </button>
                             </form>
-                            
+
                             <p class="text-center text-xs text-gray-500 mt-4 leading-relaxed">
                                 By clicking Confirm, you acknowledge that an invoice will be sent to your email with payment instructions.
                             </p>
@@ -168,5 +197,5 @@
 
         </div>
     </div>
-
+</div>
 @endsection

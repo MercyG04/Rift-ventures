@@ -7,6 +7,8 @@
         <img 
             src="{{ $variant->featured_image_path ? Storage::url($variant->featured_image_path) : ($package->featured_image_path ? Storage::url($package->featured_image_path) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80') }}" 
             alt="{{ $variant->name }}" 
+            loading="lazy"
+            decoding="async"
             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         >
         <!-- Overlay Gradient -->

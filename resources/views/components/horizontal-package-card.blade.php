@@ -8,6 +8,8 @@
         <img 
             src="{{ $package->featured_image_path ? Storage::url($package->featured_image_path) : 'https://via.placeholder.com/600x400' }}" 
             alt="{{ $package->title }}" 
+            loading="lazy"
+            decoding="async"
             class="w-full h-full object-cover"
         >
     </div>

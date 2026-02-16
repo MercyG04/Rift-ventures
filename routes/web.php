@@ -63,6 +63,8 @@ Route::middleware('signed')->group(function () {
     // For Standard Bookings
     Route::get('/bookings/{booking}/travelers', [CustTravelerDetailsController::class, 'edit'])
         ->name('bookings.travelers.edit');
+    Route::post('/bookings/{booking}/travelers', [CustTravelerDetailsController::class, 'update'])
+    ->name('bookings.travelers.update');    
         
     // For Custom Service Requests
     Route::get('/services/{service}/travelers', [CustTravelerDetailsController::class, 'editService'])
@@ -95,6 +97,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
      // --- BOOKING MANAGEMENT ---
     Route::get('/bookings/resume', [CustBookingController::class, 'resume'])->name('bookings.resume'); // The Guest->User Bridge
     Route::get('/bookings/{booking}/checkout', [CustBookingController::class, 'checkout'])->name('bookings.checkout');
+    Route::post('/bookings/{booking}/confirm', [CustBookingController::class, 'confirm'])->name('bookings.confirm');
     Route::get('/my-bookings', [CustBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/{booking}', [CustBookingController::class, 'show'])->name('bookings.show');
     Route::post('/bookings/{booking}/cancel', [CustBookingController::class, 'cancel'])->name('bookings.cancel');
@@ -132,16 +135,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])
     // Email Triggers
     Route::post('/bookings/{booking}/resend-confirmation', [AdmBookingController::class, 'resendConfirmation'])->name('bookings.resend-confirmation');
     Route::post('/bookings/{booking}/resend-cancellation', [AdmBookingController::class, 'resendCancellation'])->name('bookings.resend-cancellation');
+    Route::post('/bookings/{booking}/travelers/resend', [AdmTravelerDetailsController::class, 'resendRequest'])->name('travelers.resend');
 
     // 4. TRAVELER PII MANAGEMENT (Encrypted/Decrypted View)
-    Route::controller(AdmTravelerDetailsController::class)
-        ->prefix('bookings/{booking}/travelers')
-        ->name('travelers.')
-        ->group(function () {
-            Route::get('/', 'show')->name('show');     // View Decrypted
-            Route::get('/edit', 'edit')->name('edit'); // Edit Form
-            Route::put('/', 'update')->name('update'); // Save & Re-encrypt
-        });
+    
 
     // 5. TESTIMONIAL MODERATION
     Route::get('/testimonials', [AdmTestimonialController::class, 'index'])->name('testimonials.index');

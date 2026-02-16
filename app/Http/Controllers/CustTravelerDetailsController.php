@@ -5,48 +5,77 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\TravelService;
 use App\Models\TravelerDetail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class CustTravelerDetailsController extends Controller
 {
-    //
-    // DOOR 1: BOOKINGS (Standard Packages)
-    // 
+    
+ public static function middleware(): array
+    {
+        return [
+            // 1. Force Login for all methods
+            'auth',
+
+            
+            function ($request, $next) {
+                $user = $request->user();
+                if ($user && $user->role !== 'customer'){
+                    abort(403, 'This area is restricted to customer accounts only.');
+                }
+                return $next($request);
+            },
+        ];
+    }
+   
+
+
+    // BOOKINGS (Standard Packages)
+     
     public function edit(Request $request, Booking $booking)
     {
-        // Reuse the shared logic, telling it this is a 'booking'
+        if ($booking->user_id !== $request->user()->id)  {
+            abort(403, 'Unauthorized access to this booking.');
+        }
         return $this->loadView($booking, 'booking');
     }
 
     public function update(Request $request, Booking $booking)
     {
-        // Reuse the shared logic, telling it to save to 'booking_id'
-        return $this->processUpdate($request, $booking, 'booking_id', 'bookings.show');
+        if ($booking->user_id !== $request->user()->id)  {
+            abort(403, 'Unauthorized access to this booking.');
+        }
+        return $this->processUpdate($request, $booking, 'booking_id');
     }
 
 
-    // =========================================================
-    // DOOR 2: SERVICE INQUIRIES (Custom/Visas)
-    // =========================================================
+    
+    // ERVICE INQUIRIES (Custom/Visas)
+    
     public function editService(Request $request, TravelService $service)
     {
-        // Reuse the shared logic, telling it this is a 'service'
+         if ($service->user_id !==$request->user()->id)  {
+            abort(403, 'Unauthorized access to this service request.');
+        }
         return $this->loadView($service, 'service');
     }
 
     public function updateService(Request $request, TravelService $service)
     {
-        // Reuse the shared logic, telling it to save to 'travel_service_id'
-        // Redirect to home since services don't have a public 'show' page
-        return $this->processUpdate($request, $service, 'travel_service_id', 'home');
+         if ($service->user_id !== $request->user()->id)  {
+            abort(403, 'Unauthorized access to this service request.');
+        }
+        return $this->processUpdate($request, $service, 'travel_service_id');
     }
 
 
-    // =========================================================
-    // SHARED LOGIC (The Brain) 🧠
-    // =========================================================
+    
+    // SHARED LOGIC 
+    
 
     /**
      * Shared method to load the view for either model.
@@ -60,14 +89,14 @@ class CustTravelerDetailsController extends Controller
               ?? ($model->adults + $model->children);
 
         // 2. Load Existing Data
-        $existingTravelers = $model->travelers()->get();
+        $existingTravelers = $model->travelerDetails()->get();
 
         // 3. Determine Post Route
         $postRoute = $type === 'booking' 
             ? route('bookings.travelers.update', $model->id)
             : route('services.travelers.update', $model->id);
 
-        return view('services.travelers.edit', [
+        return view('traveler.edit', [
             'parentModel' => $model,
             'totalTravelers' => $count,
             'existingTravelers' => $existingTravelers,
@@ -78,21 +107,32 @@ class CustTravelerDetailsController extends Controller
     /**
      * Shared method to validate and save data.
      */
-    private function processUpdate(Request $request, $model, $foreignKeyColumn, $redirectRoute)
+    private function processUpdate(Request $request, $model, $foreignKeyColumn)
     {
-        // 1. Calculate count
+        // 1. ENFORCE 48-HOUR LOCK (Server-Side)
+        
+        $existing = $model->travelerDetails()->first();
+        
+        if ($existing) {
+            $hoursSinceUpdate = $existing->updated_at->diffInHours(now());
+            
+            if ($hoursSinceUpdate > 48) {
+                // If they try to hack/force a post request after 48h, we block it here.
+                return back()->with('error', 'Modification window has closed. Data is locked for processing.');
+            }
+        }
+
+        // 2. Calculate Expected Count
         $expectedCount = $model->num_travelers 
                       ?? $model->no_of_travellers 
                       ?? ($model->adults + $model->children);
 
-        // 2. Validate
+        // 3. Validate Inputs
         $validatedData = $request->validate([
             'travelers' => ['required', 'array', 'size:' . $expectedCount],
             'travelers.*.full_name' => ['required', 'string', 'max:255'],
             'travelers.*.date_of_birth' => ['required', 'date', 'before:today'],
             'travelers.*.email' => ['nullable', 'email'],
-            
-            // "Either/Or" Rule for Passport vs ID
             'travelers.*.id_number' => ['nullable', 'string', 'max:50', 'required_without:travelers.*.passport_number'],
             'travelers.*.passport_number' => ['nullable', 'string', 'max:50', 'required_without:travelers.*.id_number'],
             'travelers.*.passport_expiry' => ['nullable', 'date', 'after:today', 'required_with:travelers.*.passport_number'],
@@ -100,13 +140,12 @@ class CustTravelerDetailsController extends Controller
 
         try {
             DB::transaction(function () use ($model, $validatedData, $foreignKeyColumn) {
-                // Delete old records (Clean slate)
-                $model->travelers()->delete();
+               
+                $model->travelerDetails()->delete();
 
-                // Create new ones
                 foreach ($validatedData['travelers'] as $index => $data) {
                     TravelerDetail::create([
-                        $foreignKeyColumn => $model->id, // Saves to booking_id OR travel_service_id
+                        $foreignKeyColumn => $model->id, 
                         'full_name' => $data['full_name'],
                         'email' => $data['email'] ?? null,
                         'is_primary_contact' => ($index === 0),
@@ -115,19 +154,15 @@ class CustTravelerDetailsController extends Controller
                         'date_of_birth' => $data['date_of_birth'],
                         'passport_expiry' => $data['passport_expiry'] ?? null,
                     ]);
-                    // Encryption is automatic via Model Casts
                 }
             });
 
-            // Redirect with success message
-            if ($redirectRoute === 'home') {
-                 return redirect()->route('home')->with('success', 'Traveler details submitted securely. We will process your documents shortly.');
-            }
-            return redirect()->route($redirectRoute, $model)->with('success', 'Traveler details submitted securely.');
+            
+            return back()->with('success', 'Traveler details submitted securely. You have 48 hours to make corrections if needed.');
 
         } catch (Throwable $e) {
-            \Log::error("Traveler PII Update Failed: " . $e->getMessage());
-            return back()->with('error', 'System error saving details. Please try again.');
+            Log::error("Traveler PII Update Failed: " . $e->getMessage());
+            return back()->with('error', 'System error saving details. Please try again or contact support.');
         }
     }
 }
