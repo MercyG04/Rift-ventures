@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Enums\UserRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -27,8 +28,23 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect('/');
     }
+
+    public function test_admins_are_redirected_to_admin_dashboard(): void
+{
+    // 1. Create a user with the admin role
+    $admin = User::factory()->create(['role' => UserRole::ADMIN->value]); 
+
+    // 2. Log them in
+    $response = $this->post('/login', [
+        'email' => $admin->email,
+        'password' => 'password',
+    ]);
+
+    // 3. Expect the admin path!
+    $response->assertRedirect('/admin/dashboard');
+}
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {

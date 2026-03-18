@@ -28,6 +28,10 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        if ($request->user()->isAdmin()) { 
+        return redirect()->intended('/admin/dashboard');
+    }
+
         if (session()->has('pending_booking')) {
     return redirect()->route('bookings.resume');
 }

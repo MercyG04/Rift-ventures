@@ -19,7 +19,7 @@ class CheckRoleMiddleware
        
             // 1. Check for Authentication
         // Ensure a user is logged in before checking their role. 
-        // This middleware should typically run *after* 'auth'.
+        
         if (!Auth::check()) {
             // Redirect unauthenticated users to the login page.
             return redirect()->route('login');
@@ -29,7 +29,7 @@ class CheckRoleMiddleware
         $user = Auth::user();
 
         // 3. Perform Role Check (using the model's logic for cleanliness)
-        // We use a simple switch/match statement to check against the expected role.
+        
         switch ($role) {
             case 'admin':
                 // Use the dedicated helper method from the User model:
@@ -47,7 +47,7 @@ class CheckRoleMiddleware
                  break;
 
             default:
-                // If the role parameter is unknown, deny access.
+                
                 break;
         }
 
