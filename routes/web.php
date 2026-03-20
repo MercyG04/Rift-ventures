@@ -125,7 +125,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 
     Route::patch('packages/{package}/toggle-status', [AdmPackageController::class, 'toggleStatus', ])
         ->name('packages.toggle-status');
-    Route::resource('packages', AdmPackageController::class)->except(['show','destroy']);
+    Route::resource('packages', AdmPackageController::class)->except(['show','destroy', 'index']);
     Route::resource('packages.variants', AdmPackageVariantController::class)->except(['index', 'show']);
 
     // 3. BOOKING OVERSIGHT

@@ -45,7 +45,7 @@ class BookingInvoice extends Notification
             ->line('---')
             ->line('**Payment Instructions:**')
             ->line('Please make your payment via:')
-            ->line('1. **M-Pesa Till:** 123456 (SafariBook Ltd)')
+            ->line('1. **M-Pesa Till:** 123456 (Rift Ventures Safaris)')
             ->line('2. **Bank Transfer:** KCB Account 1234567890')
             ->line('Please use your Booking Reference (#' . $this->booking->id . ') as the payment description.')
             ->line('---')
